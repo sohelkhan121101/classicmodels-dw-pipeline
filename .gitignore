@@ -1,0 +1,36 @@
+# ---- Secrets - NEVER commit real credentials ----
+config/secrets.yaml
+
+# ---- Generated / runtime state (not source code) ----
+metadata/watermark_state.json
+metadata/schema_registry.json
+logs/*.jsonl
+backup/*
+data/raw/*
+data/archive/*
+data/curated/*
+data/quarantine/*
+!data/raw/.gitkeep
+!data/archive/.gitkeep
+!data/curated/.gitkeep
+!data/quarantine/.gitkeep
+!logs/.gitkeep
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+venv/
+.venv/
+
+# ---- Spark ----
+spark-warehouse/
+metastore_db/
+derby.log
+
+# ---- OS/IDE ----
+.DS_Store
+.vscode/
+.idea/
+.pytest_cache

@@ -1,0 +1,66 @@
+{
+  "productlines": {
+    "load_type": "full",
+    "watermark_column": null,
+    "lookback_days": 0,
+    "primary_key": ["productLine"],
+    "scd_type": "type1",
+    "is_active": true
+  },
+  "offices": {
+    "load_type": "full",
+    "watermark_column": null,
+    "lookback_days": 0,
+    "primary_key": ["officeCode"],
+    "scd_type": "type1",
+    "is_active": true
+  },
+  "employees": {
+    "load_type": "full",
+    "watermark_column": null,
+    "lookback_days": 0,
+    "primary_key": ["employeeNumber"],
+    "scd_type": "type2",
+    "is_active": true
+  },
+  "products": {
+    "load_type": "full",
+    "watermark_column": null,
+    "lookback_days": 0,
+    "primary_key": ["productCode"],
+    "scd_type": "type2",
+    "is_active": true
+  },
+  "customers": {
+    "load_type": "full",
+    "watermark_column": null,
+    "lookback_days": 0,
+    "primary_key": ["customerNumber"],
+    "scd_type": "type2",
+    "is_active": true
+  },
+  "orders": {
+    "load_type": "incremental",
+    "watermark_column": "orderDate",
+    "lookback_days": 7,
+    "primary_key": ["orderNumber"],
+    "scd_type": "na",
+    "is_active": true
+  },
+  "orderdetails": {
+    "load_type": "incremental",
+    "watermark_column": "orderNumber",
+    "lookback_days": 0,
+    "primary_key": ["orderNumber", "productCode"],
+    "scd_type": "na",
+    "is_active": true
+  },
+  "payments": {
+    "load_type": "incremental",
+    "watermark_column": "paymentDate",
+    "lookback_days": 7,
+    "primary_key": ["customerNumber", "checkNumber"],
+    "scd_type": "na",
+    "is_active": true
+  }
+}
