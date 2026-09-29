@@ -165,6 +165,28 @@ TABLE_CREATE_ORDER = [
     "fact_order_line", "fact_payment",
 ]
 
+# Foreign keys, added as a separate ALTER-TABLE pass (after every table
+# already exists) so DBeaver/any ERD tool can auto-draw the star schema's
+# join lines. Named constraints so re-running ensure_schema() is idempotent
+# (we check information_schema before adding, see _add_foreign_keys).
+FOREIGN_KEYS = [
+    # (constraint_name, child_table, child_column, parent_table, parent_column)
+    ("fk_employee_office", "dim_employee", "office_key", "dim_office", "office_key"),
+    ("fk_product_productline", "dim_product", "product_line_key", "dim_product_line", "product_line_key"),
+    ("fk_customer_salesrep", "dim_customer", "sales_rep_employee_key", "dim_employee", "employee_key"),
+
+    ("fk_fol_orderdate", "fact_order_line", "order_date_key", "dim_date", "date_key"),
+    ("fk_fol_requireddate", "fact_order_line", "required_date_key", "dim_date", "date_key"),
+    ("fk_fol_shippeddate", "fact_order_line", "shipped_date_key", "dim_date", "date_key"),
+    ("fk_fol_customer", "fact_order_line", "customer_key", "dim_customer", "customer_key"),
+    ("fk_fol_employee", "fact_order_line", "employee_key", "dim_employee", "employee_key"),
+    ("fk_fol_product", "fact_order_line", "product_key", "dim_product", "product_key"),
+    ("fk_fol_orderstatus", "fact_order_line", "order_status_key", "dim_order_status", "order_status_key"),
+
+    ("fk_fp_paymentdate", "fact_payment", "payment_date_key", "dim_date", "date_key"),
+    ("fk_fp_customer", "fact_payment", "customer_key", "dim_customer", "customer_key"),
+]
+
 
 class MySQLManager:
     """
@@ -208,6 +230,35 @@ class MySQLManager:
             for table in TABLE_CREATE_ORDER:
                 conn.execute(text(DDL_STATEMENTS[table]))
             conn.commit()
+        self._add_foreign_keys()
+
+    def _existing_foreign_keys(self) -> set:
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT constraint_name FROM information_schema.table_constraints "
+                    "WHERE table_schema = :db AND constraint_type = 'FOREIGN KEY'"
+                ),
+                {"db": self.database},
+            ).fetchall()
+            return {r[0] for r in rows}
+
+    def _add_foreign_keys(self):
+        """Adds FK constraints (fact -> dim, dim -> dim) so ER-diagram tools
+        like DBeaver can auto-draw the star schema's join lines. Idempotent:
+        skips any constraint that already exists (checked by name via
+        information_schema, since MySQL has no ADD CONSTRAINT IF NOT EXISTS)."""
+        existing = self._existing_foreign_keys()
+        with self.engine.connect() as conn:
+            for constraint_name, child_table, child_col, parent_table, parent_col in FOREIGN_KEYS:
+                if constraint_name in existing:
+                    continue
+                conn.execute(text(
+                    f"ALTER TABLE `{child_table}` "
+                    f"ADD CONSTRAINT `{constraint_name}` "
+                    f"FOREIGN KEY (`{child_col}`) REFERENCES `{parent_table}` (`{parent_col}`)"
+                ))
+            conn.commit()
 
     def table_exists(self, table_name: str) -> bool:
         with self.engine.connect() as conn:
@@ -245,9 +296,15 @@ class MySQLManager:
         """
         with self.engine.begin() as conn:
             conn.execute(text(DDL_STATEMENTS[table_name]))
+            # Dims and facts are reloaded independently and not always in FK
+            # dependency order, and MySQL refuses to TRUNCATE a table that's
+            # referenced by a live FK - so checks are turned off just for
+            # this truncate+reload, then restored.
+            conn.execute(text("SET FOREIGN_KEY_CHECKS=0"))
             conn.execute(text(f"TRUNCATE TABLE `{table_name}`"))
             if not df.empty:
                 df.to_sql(table_name, conn, if_exists="append", index=False)
+            conn.execute(text("SET FOREIGN_KEY_CHECKS=1"))
 
     def append_table(self, table_name: str, df: pd.DataFrame):
         if df.empty:

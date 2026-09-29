@@ -41,33 +41,29 @@ def reset_state_files(secrets: dict):
         print(f"reset -> {f}")
 
 
-# def reset_data_and_logs(secrets: dict):
-#     for key in ("raw", "archive", "curated", "quarantine"):
-#         path = resolve_path(secrets["paths"][key])
-#         if os.path.exists(path):
-#             shutil.rmtree(path)
-#             print(f"removed -> {path}")
-#         os.makedirs(path, exist_ok=True)
-
-#     logs_dir = resolve_path(secrets["paths"]["logs"])
-#     if os.path.exists(logs_dir):
-#         for fname in os.listdir(logs_dir):
-#             if fname.endswith(".jsonl"):
-#                 fpath = os.path.join(logs_dir, fname)
-#                 os.remove(fpath)
-#                 print(f"removed -> {fpath}")
-#     os.makedirs(logs_dir, exist_ok=True)
-
 def reset_data_and_logs(secrets: dict):
+    # "archive" is optional - some setups (like this one) don't keep a
+    # separate archive copy, so its key may not exist in secrets.yaml at
+    # all. Every other key here is skipped the same way if it's missing,
+    # rather than crashing on a KeyError.
     for key in ("raw", "archive", "curated", "quarantine"):
         if key not in secrets["paths"]:
             print(f"skipped -> '{key}' not configured in secrets.yaml (paths), nothing to reset")
-            continue                          
+            continue
         path = resolve_path(secrets["paths"][key])
         if os.path.exists(path):
             shutil.rmtree(path)
             print(f"removed -> {path}")
         os.makedirs(path, exist_ok=True)
+
+    logs_dir = resolve_path(secrets["paths"]["logs"])
+    if os.path.exists(logs_dir):
+        for fname in os.listdir(logs_dir):
+            if fname.endswith(".jsonl"):
+                fpath = os.path.join(logs_dir, fname)
+                os.remove(fpath)
+                print(f"removed -> {fpath}")
+    os.makedirs(logs_dir, exist_ok=True)
 
 
 def reset_gold_tables(secrets: dict):
@@ -78,9 +74,15 @@ def reset_gold_tables(secrets: dict):
     dw = MySQLManager(mysql_gold_cfg)
     dw.ensure_schema()
     with dw.engine.begin() as conn:
+        # FK constraints now exist between the star-schema tables (so ERD
+        # tools like DBeaver can draw them) - truncating one at a time in
+        # TABLE_CREATE_ORDER would still fail against a live FK, so checks
+        # are turned off for this reset pass only.
+        conn.execute(text("SET FOREIGN_KEY_CHECKS=0"))
         for table in TABLE_CREATE_ORDER:
             conn.execute(text(f"TRUNCATE TABLE `{table}`"))
             print(f"truncated -> {mysql_gold_cfg['database']}.{table}")
+        conn.execute(text("SET FOREIGN_KEY_CHECKS=1"))
 
 
 def main():
