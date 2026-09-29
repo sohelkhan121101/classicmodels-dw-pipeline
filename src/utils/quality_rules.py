@@ -3,27 +3,16 @@ quality_rules.py
 -------------------
 Config-driven data-quality rule engine for the Raw -> Curated layer.
 
-Rules live in metadata/quality_rules.json, one list of rule dicts per
-table. Supported rule types (add more here as the project grows -
-no other file needs to change to add a new table's rules):
-
     not_null        {"type": "not_null", "columns": [...]}
     min_value       {"type": "min_value", "column": "...", "value": N}
                      (nulls pass this rule - use not_null for null-checks)
     max_value       {"type": "max_value", "column": "...", "value": N}
     allowed_values  {"type": "allowed_values", "column": "...", "values": [...]}
 
-On top of whatever is in quality_rules.json, apply_quality_rules() ALWAYS
-also checks for duplicate primary keys (using table_config.json's
-primary_key), since a duplicate business key is a data-quality problem
-regardless of whether anyone remembered to declare it as a rule.
-
 A row that fails ANY rule (or is a duplicate PK) is quarantined with a
 "quarantine_reason" column listing every rule it broke, semicolon-joined
 - so an invalid row is never silently dropped and its exact reason is
-always visible for debugging (or reprocessing) later. Nothing here ever
-raises - an unknown rule type is the one exception, since that's a config
-mistake that should fail loudly at rule-load time, not hide a bad row.
+always visible for debugging (or reprocessing) later.
 """
 
 import json

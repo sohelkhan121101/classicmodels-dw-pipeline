@@ -1,19 +1,3 @@
-"""
-constants.py
---------------
-Small domain-level sentinel values that were previously hardcoded inline
-in multiple places (e.g. date(9999, 12, 31) typed directly into
-curated_to_gold.py, "1900-01-01" typed directly into source_to_raw.py).
-
-These are still SENSIBLE DEFAULTS (9999-12-31 is the standard Kimball
-"open-ended / still current" SCD2 sentinel; 1900-01-01 is the standard
-"beginning of time" fallback for a first-ever incremental load with no
-watermark yet) - so nothing behaves differently out of the box. What
-changes is that every one of them is now a single named constant, defined
-in one place and overridable via an environment variable, instead of a
-magic literal repeated (and possibly drifting) across files.
-"""
-
 import os
 from datetime import datetime
 

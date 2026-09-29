@@ -139,9 +139,7 @@ TABLE_CREATE_ORDER = [
 ]
 
 # Foreign keys, added as a separate ALTER-TABLE pass (after every table
-# already exists) so DBeaver/any ERD tool can auto-draw the star schema's
-# join lines. Named constraints so re-running ensure_schema() is idempotent
-# (we check information_schema before adding, see _add_foreign_keys).
+# already exists)
 FOREIGN_KEYS = [
     # (constraint_name, child_table, child_column, parent_table, parent_column)
     ("fk_employee_office", "dim_employee", "office_key", "dim_office", "office_key"),
@@ -162,16 +160,6 @@ FOREIGN_KEYS = [
 
 
 class MySQLManager:
-    """
-    Same public interface as DuckDBManager, backed by MySQL instead.
-
-    mysql_cfg example (from secrets.yaml -> warehouse.mysql):
-        host: "localhost"
-        port: 3306
-        database: "classicmodels_dw"
-        user: "root"
-        password: "..."
-    """
 
     def __init__(self, mysql_cfg: dict):
         self.mysql_cfg = mysql_cfg
@@ -188,8 +176,7 @@ class MySQLManager:
 
     def _ensure_database_exists(self):
         """Creates the gold database itself (e.g. classicmodels_dw) if it
-        doesn't exist yet, using a server-level connection (no database
-        selected). Safe to call every run."""
+        doesn't exist yet"""
         server_engine = create_engine(self._server_url())
         try:
             with server_engine.connect() as conn:
@@ -217,10 +204,7 @@ class MySQLManager:
             return {r[0] for r in rows}
 
     def _add_foreign_keys(self):
-        """Adds FK constraints (fact -> dim, dim -> dim) so ER-diagram tools
-        like DBeaver can auto-draw the star schema's join lines. Idempotent:
-        skips any constraint that already exists (checked by name via
-        information_schema, since MySQL has no ADD CONSTRAINT IF NOT EXISTS)."""
+        """Adds FK constraints (fact -> dim, dim -> dim)"""
         existing = self._existing_foreign_keys()
         with self.engine.connect() as conn:
             for constraint_name, child_table, child_col, parent_table, parent_col in FOREIGN_KEYS:
@@ -260,13 +244,7 @@ class MySQLManager:
             return int(result[0])
 
     def overwrite_table(self, table_name: str, df: pd.DataFrame):
-        """Replaces the ENTIRE contents of a table with df.
 
-        pandas.to_sql() writes an INSERT with explicit column names taken
-        from the DataFrame, so a mismatched column order (vs. the DDL)
-        still lands in the right columns - the MySQL equivalent of
-        DuckDB's "INSERT ... BY NAME" protection.
-        """
         with self.engine.begin() as conn:
             conn.execute(text(DDL_STATEMENTS[table_name]))
             # Dims and facts are reloaded independently and not always in FK

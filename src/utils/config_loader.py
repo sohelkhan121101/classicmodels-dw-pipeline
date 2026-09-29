@@ -8,15 +8,6 @@ Single place responsible for reading:
 Keeping this separate means every other module just calls
 `load_secrets()` / `load_table_config()` instead of re-implementing
 file I/O everywhere - single source of truth for config access.
-
-PROJECT_ROOT and the default config file locations were previously
-computed purely from this file's own location on disk (__file__), with
-no way to override them. That's fragile the moment the pipeline runs
-from a different working directory, inside Docker with a different
-mount path, or in CI - and it made pointing tests at fixture configs
-awkward. Every path here can now be overridden with an environment
-variable; if unset, it falls back to the original file-relative
-default, so nothing changes for the normal local-run case.
 """
 
 import json

@@ -3,8 +3,7 @@ logger.py
 ---------
 Custom structured JSON logger for the pipeline.
 
-Every log record is a single JSON object with a FIXED set of fields, so
-downstream tools (Grafana, jq, pandas) can parse logs without regex:
+Every log record is a single JSON object with a FIXED set of fields
 
     timestamp        -> ISO8601 UTC time the log was emitted
     source           -> which layer/table/component emitted it (e.g. "orders" / "raw_extractor")

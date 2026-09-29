@@ -7,10 +7,6 @@ All reads/writes to our JSON-based metadata store live here:
     metadata/schema_registry.json   -> per-table last-known schema (for schema evolution detection)
     logs/pipeline_run_log.jsonl     -> append-only run history (JSON Lines)
 
-IMPORTANT: watermark is only ever updated on SUCCESS - this is the
-"self-healing without human intervention" mechanism. If a run fails, the
-watermark stays where it was, so the very next scheduled run automatically
-re-attempts the same window - no manual reset needed.
 """
 
 import json
