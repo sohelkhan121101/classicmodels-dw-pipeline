@@ -3,13 +3,6 @@ test_curated_to_gold.py
 --------------------------
 Unit tests for src/transform/curated_to_gold.py
 
-These tests target the PURE logic - classify_row, compute_row_hash, and
-the full scd2_merge function - all of which run on plain Python/pandas
-with NO SparkSession and NO DuckDB connection required. This is exactly
-the SCD2 "expire-old/insert-new" mechanism discussed throughout this
-project's design, so it's the highest-value logic to lock down with tests.
-
-build_dim_date_rows is also tested directly (pure function, no I/O).
 """
 
 import sys

@@ -1,7 +1,7 @@
 """
 raw_to_curated.py
 ------------------
-Layer: RAW -> CURATED (+ QUARANTINE for bad rows)
+Layer: RAW -> CURATED + QUARANTINE for bad rows
 
 Responsibilities:
   1. Read the LATEST raw partition for a table (today's run_id).
@@ -14,10 +14,6 @@ Responsibilities:
      snapshot for that table. Duplicates are already resolved by the
      quality-rule engine (first occurrence kept, rest quarantined), so
      there's no separate dropDuplicates() step here anymore.
-
-This module does NOT do dimensional modeling (no surrogate keys, no SCD2
-logic) - that belongs to curated_to_gold.py. Curated's job is just:
-"same grain as source, but clean and trustworthy."
 """
 
 import sys

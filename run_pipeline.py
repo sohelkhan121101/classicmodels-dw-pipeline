@@ -5,12 +5,8 @@ Single entry point for the whole local classicmodels pipeline:
 
     Stage 1: source_to_raw.run_all()     MySQL      -> Raw 
     Stage 2: raw_to_curated.run_all()    Raw        -> Curated + Quarantine
-    Stage 3: curated_to_gold.run_all()   Curated    -> Gold (star schema, MySQL "classicmodels_dw")
+    Stage 3: curated_to_gold.run_all()   Curated    -> Gold 
 
-Each stage isolates per-table failures internally (self-healing: a bad
-table doesn't crash the run, and its watermark simply doesn't advance).
-This script stops moving forward a layer if the layer behind it had ZERO
-successful tables, since there's nothing new/valid to build on top of.
 """
 
 import sys

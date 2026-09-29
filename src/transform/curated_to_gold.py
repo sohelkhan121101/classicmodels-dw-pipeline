@@ -1,38 +1,3 @@
-"""
-curated_to_gold.py
----------------------
-Layer: CURATED -> GOLD (the star schema we designed: dim_* + fact_*)
-
-Warehouse target: a MySQL database (default name "classicmodels_dw") in the
-SAME Docker MySQL container used as the source, written to via
-src/warehouse/mysql_manager.py - browsable directly in DBeaver.
-
-SCD handling (per table_config.json -> "scd_type"):
-    type1  -> dim_office, dim_product_line, dim_order_status
-              simple full overwrite every run (small master data, no history needed)
-    type2  -> dim_employee, dim_product, dim_customer
-              row-hash change detection + expire-old/insert-new versioning,
-              because credit_limit / sales rep / job title / price changes
-              are business-meaningful history we must preserve
-
-All the heavy lifting (reading curated Parquet, hashing rows, joining to
-detect what changed) happens in PySpark, per the project requirement of
-being PySpark end-to-end. The actual SCD2 NEW/CHANGED/UNCHANGED decision
-per row is a tiny, pure, Spark-independent function (`classify_row`) so
-it can be unit tested directly without spinning up a SparkSession.
-
-Known local-project simplifications (documented, not hidden):
-  - fact_order_line resolves customer/employee/product to whatever dim
-    version is CURRENT at pipeline run time, not "as-of the order date".
-    True as-of resolution would need row_effective_date/row_end_date
-    range joins against order_date - left as a documented follow-up.
-  - A natural key present in the current dim but missing from a fresh
-    curated full-load (i.e. looks deleted at source) is left untouched
-    (no hard delete, no auto-expire) - flagged as a WARNING log instead,
-    since silently expiring on a MISSING row is a stronger assumption
-    than this project needs today.
-"""
-
 import sys
 import os
 import hashlib

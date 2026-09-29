@@ -2,17 +2,6 @@
 test_mysql_manager.py
 -------------------------
 Unit tests for src/warehouse/mysql_manager.py
-
-These tests need a REAL MySQL server reachable (your Docker container).
-They connect to a throwaway database "classicmodels_dw_test" on the same
-server as secrets.yaml -> warehouse.mysql (so run this against your local
-Docker MySQL, not in an environment with no MySQL reachable). The test
-database is dropped and recreated fresh at the start of the session and
-dropped again at the end, so it never touches your real "classicmodels_dw".
-
-If no MySQL server can be reached, every test here is skipped rather than
-failing the whole suite - that keeps `pytest tests/` runnable in sandboxes
-without a MySQL server, while still giving real coverage on your machine.
 """
 
 import os

@@ -5,7 +5,6 @@ Unit tests for src/utils/quality_rules.py - the config-driven Raw->Curated
 data-quality engine (not_null, min_value, max_value, allowed_values rules,
 plus the always-on duplicate-primary-key check).
 
-Uses the shared session-scoped `spark` fixture from conftest.py.
 """
 
 import os

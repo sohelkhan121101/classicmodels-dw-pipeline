@@ -5,18 +5,6 @@ Resets DYNAMIC pipeline state so the next run behaves like a brand-new,
 first-ever run. Does NOT touch config/secrets.yaml or
 metadata/table_config.json - those are static configuration, not state.
 
-Resets:
-  - metadata/watermark_state.json  -> {}
-  - metadata/schema_registry.json  -> {}
-  - data/raw, data/archive, data/curated, data/quarantine  -> removed (local folders)
-  - logs/*.jsonl                   -> removed
-  - Gold star-schema tables in MySQL ("classicmodels_dw") -> TRUNCATEd, since
-    Gold now lives in the Dockerized MySQL warehouse, not a local folder.
-
-Usage:
-    python reset_pipeline.py                # reset everything (state + local data + logs + gold tables)
-    python reset_pipeline.py --state-only   # only reset watermark/schema json,
-                                             # keep raw/curated/logs on disk and gold tables in MySQL
 """
 
 import argparse

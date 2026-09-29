@@ -1,30 +1,3 @@
-"""
-mysql_manager.py
--------------------
-The GOLD warehouse lives in a MySQL database (a separate schema, e.g.
-"classicmodels_dw", in the SAME Docker MySQL container the user already
-runs for the source "classicmodels" database) instead of a local DuckDB
-file. Browsable directly in DBeaver like the rest of the project.
-
-Same public interface as DuckDBManager (ensure_schema, table_exists,
-read_table, get_max_surrogate_key, overwrite_table, append_table) so
-curated_to_gold.py needs only a one-line import swap to switch targets.
-
-Design notes / MySQL-specific differences from the DuckDB version:
-  - MySQL has no "INSERT ... BY NAME". Instead we rely on pandas'
-    to_sql(), which always generates an INSERT with EXPLICIT column
-    names taken from the DataFrame - so a DataFrame whose column order
-    doesn't match the table's declared column order still lands
-    correctly. This is the MySQL equivalent protection for the exact
-    bug we hit with DuckDB's positional INSERT.
-  - overwrite_table() does TRUNCATE + to_sql(append) inside one
-    connection so it stays a single atomic-ish swap from the caller's
-    point of view (not multi-statement-transaction safe across a crash
-    mid-way, which is an accepted local-project simplification).
-  - BOOLEAN is stored as TINYINT(1) (MySQL's usual mapping) and read
-    back as an int 0/1; callers that need real bool should cast.
-"""
-
 import os
 
 import pandas as pd
