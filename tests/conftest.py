@@ -1,32 +1,32 @@
 """
 conftest.py
-------------
-Shared fixtures for the whole test suite.
-
-A single session-scoped local[1] SparkSession is reused across all tests
-that need a real DataFrame (query-building logic and quality-rule logic
-are tested against actual PySpark DataFrames, not mocks, since that's
-where real bugs - wrong column names, wrong filter conditions - show up).
+-------------
+Shared pytest fixtures. A single session-scoped SparkSession, reused by
+every test file that needs one (spinning up a new one per test is slow
+and unnecessary - Spark itself is stateless enough across our tests).
 """
-
-import sys
 import os
-import pytest
+import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import pytest
 from pyspark.sql import SparkSession
+
+from src.utils.spark_utils import configure_pyspark_python
 
 
 @pytest.fixture(scope="session")
 def spark():
-    session = (
+    configure_pyspark_python()
+    spark = (
         SparkSession.builder
         .appName("classicmodels_pipeline_tests")
-        .master("local[1]")
+        .master("local[2]")
+        .config("spark.sql.shuffle.partitions", 2)
         .config("spark.ui.enabled", "false")
-        .config("spark.sql.shuffle.partitions", "1")
         .getOrCreate()
     )
-    yield session
-    session.stop()
+    spark.sparkContext.setLogLevel("ERROR")
+    yield spark
+    spark.stop()

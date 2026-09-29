@@ -2,3 +2,6 @@ pyspark
 pyyaml
 mysql-connector-python
 pytest
+pandas
+sqlalchemy
+pymysql

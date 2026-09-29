@@ -3,7 +3,9 @@ logger.py
 ---------
 Custom structured JSON logger for the pipeline.
 
-Every log record is a single JSON object with a FIXED set of fields
+Every log record is a single JSON object with a FIXED set of fields, so
+downstream tools (Grafana, jq, pandas) can parse logs without regex:
+
     timestamp        -> ISO8601 UTC time the log was emitted
     source           -> which layer/table/component emitted it (e.g. "orders" / "raw_extractor")
     who              -> the process/user context (getpass.getuser() + hostname), i.e. "who ran this"
@@ -25,6 +27,8 @@ import getpass
 import os
 from datetime import datetime, timezone
 
+from src.utils.constants import DEFAULT_ACTIVITY_LOG_FILE
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -44,7 +48,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, default=str)
 
 
-def get_logger(log_dir: str = "logs", log_file: str = "pipeline.jsonl") -> logging.Logger:
+def get_logger(log_dir: str = "logs", log_file: str = DEFAULT_ACTIVITY_LOG_FILE) -> logging.Logger:
     os.makedirs(log_dir, exist_ok=True)
     logger = logging.getLogger("classicmodels_pipeline")
 

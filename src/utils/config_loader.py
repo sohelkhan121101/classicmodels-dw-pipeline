@@ -8,23 +8,66 @@ Single place responsible for reading:
 Keeping this separate means every other module just calls
 `load_secrets()` / `load_table_config()` instead of re-implementing
 file I/O everywhere - single source of truth for config access.
+
+PROJECT_ROOT and the default config file locations were previously
+computed purely from this file's own location on disk (__file__), with
+no way to override them. That's fragile the moment the pipeline runs
+from a different working directory, inside Docker with a different
+mount path, or in CI - and it made pointing tests at fixture configs
+awkward. Every path here can now be overridden with an environment
+variable; if unset, it falls back to the original file-relative
+default, so nothing changes for the normal local-run case.
 """
 
 import json
-import yaml
 import os
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+import yaml
+
+# Default: two levels up from src/utils/config_loader.py -> project root.
+# Override with CLASSICMODELS_PROJECT_ROOT if the pipeline is run from
+# somewhere that layout doesn't hold (a different mount path in Docker,
+# a packaged install, etc).
+PROJECT_ROOT = os.environ.get(
+    "CLASSICMODELS_PROJECT_ROOT",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")),
+)
+
+
+def _default_secrets_path() -> str:
+    return os.environ.get(
+        "CLASSICMODELS_SECRETS_PATH",
+        os.path.join(PROJECT_ROOT, "config", "secrets.yaml"),
+    )
+
+
+def _default_table_config_path() -> str:
+    return os.environ.get(
+        "CLASSICMODELS_TABLE_CONFIG_PATH",
+        os.path.join(PROJECT_ROOT, "metadata", "table_config.json"),
+    )
 
 
 def load_secrets(path: str = None) -> dict:
-    path = path or os.path.join(PROJECT_ROOT, "config", "secrets.yaml")
+    path = path or _default_secrets_path()
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"secrets.yaml not found at '{path}'. "
+            f"Copy config/secrets.yaml.example to config/secrets.yaml and fill in your "
+            f"real credentials, or set CLASSICMODELS_SECRETS_PATH to point at your config file."
+        )
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
 
 def load_table_config(path: str = None) -> dict:
-    path = path or os.path.join(PROJECT_ROOT, "metadata", "table_config.json")
+    path = path or _default_table_config_path()
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"table_config.json not found at '{path}'. "
+            f"Set CLASSICMODELS_TABLE_CONFIG_PATH to point at your config file if it "
+            f"lives somewhere other than metadata/table_config.json."
+        )
     with open(path, "r") as f:
         return json.load(f)
 
@@ -34,5 +77,6 @@ def get_active_tables(table_config: dict) -> list:
 
 
 def resolve_path(relative_path: str) -> str:
-    """Resolve a path from secrets.yaml relative to project root."""
+    """Resolve a path from secrets.yaml relative to PROJECT_ROOT (itself
+    overridable via CLASSICMODELS_PROJECT_ROOT - see module docstring)."""
     return os.path.join(PROJECT_ROOT, relative_path)

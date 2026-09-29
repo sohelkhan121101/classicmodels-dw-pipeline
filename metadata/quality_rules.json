@@ -1,0 +1,34 @@
+{
+  "customers": [
+    {"type": "not_null", "columns": ["customerNumber", "customerName"]},
+    {"type": "min_value", "column": "creditLimit", "value": 0}
+  ],
+  "employees": [
+    {"type": "not_null", "columns": ["employeeNumber", "firstName", "lastName", "officeCode"]}
+  ],
+  "offices": [
+    {"type": "not_null", "columns": ["officeCode", "city"]}
+  ],
+  "productlines": [
+    {"type": "not_null", "columns": ["productLine"]}
+  ],
+  "products": [
+    {"type": "not_null", "columns": ["productCode", "productName", "productLine"]},
+    {"type": "min_value", "column": "MSRP", "value": 0},
+    {"type": "min_value", "column": "buyPrice", "value": 0},
+    {"type": "min_value", "column": "quantityInStock", "value": 0}
+  ],
+  "orders": [
+    {"type": "not_null", "columns": ["orderNumber", "orderDate", "customerNumber"]},
+    {"type": "allowed_values", "column": "status", "values": ["Shipped", "Resolved", "Cancelled", "On Hold", "Disputed", "In Process"]}
+  ],
+  "orderdetails": [
+    {"type": "not_null", "columns": ["orderNumber", "productCode"]},
+    {"type": "min_value", "column": "quantityOrdered", "value": 1},
+    {"type": "min_value", "column": "priceEach", "value": 0}
+  ],
+  "payments": [
+    {"type": "not_null", "columns": ["customerNumber", "checkNumber", "paymentDate"]},
+    {"type": "min_value", "column": "amount", "value": 0}
+  ]
+}

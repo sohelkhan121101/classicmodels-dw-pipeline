@@ -27,6 +27,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from src.utils.spark_utils import configure_pyspark_python
 
 from pyspark.sql import SparkSession
 
@@ -37,6 +38,7 @@ from src.utils.metadata_manager import MetadataManager
 
 # build_spark_session 
 def build_spark_session(secrets: dict) -> SparkSession:
+    configure_pyspark_python()
     spark_cfg = secrets["spark"]
     return (
         SparkSession.builder
